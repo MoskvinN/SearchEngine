@@ -3,7 +3,7 @@ import java.util.ArrayList;
 public class Main {
     public static void main(String[] args) {
         Company company = new Company();
-        Company.setIncome(11_000_000.0);
+        company.setIncome(11_000_000.0);
         ArrayList<Employee> employees = new ArrayList<>();
         for (int i = 0; i < 180; i++) {
             employees.add(new Operator(25000 + (int)(Math.random() * (25001))));
@@ -12,7 +12,7 @@ public class Main {
             employees.add(new Manager(50000 + (int)(Math.random() * (25001))));
         }
         for (int i = 0; i < 10; i++) {
-            employees.add(new TopManager(115000 + (int)(Math.random() * (25001))));
+            employees.add(new TopManager(115000 + (int)(Math.random() * (25001)), company));
         }
         company.hireAll(employees);
         System.out.println(company.getTopSalaryStaff(10));

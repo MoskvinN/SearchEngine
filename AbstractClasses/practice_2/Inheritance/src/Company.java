@@ -7,10 +7,10 @@ public class Company {
 
     private ArrayList<Employee> staff = new ArrayList<>();
 
-    private static double income;
+    private double income;
 
-    public static void setIncome(double income) {
-        Company.income = income;
+    public void setIncome(double income) {
+        this.income = income;
     }
 
     public List<Employee> getTopSalaryStaff(int count){
@@ -60,7 +60,7 @@ public class Company {
         staff.remove(employee);
     }
 
-    public static double getIncome() {
+    public double getIncome() {
         return income;
     }
 }
