@@ -1,0 +1,10 @@
+2022-11-10 03:53:44.035 [main] INFO   - Запрос add
+2022-11-10 03:53:45.475 [main] INFO   - Запрос add
+2022-11-10 03:53:45.475 [main] ERROR  - Сообщение об ошибке Wrong phone number. Correct format: +79999999999
+2022-11-10 03:53:48.703 [main] INFO   - Запрос add
+2022-11-10 03:53:48.703 [main] ERROR  - Сообщение об ошибке Wrong email. Correct format: vasily.petrov@gmail.com
+2022-11-10 03:53:56.009 [main] INFO   - Запрос add
+2022-11-10 03:53:56.009 [main] ERROR  - Сообщение об ошибке Wrong format. Correct format: add Василий Петров vasily.petrov@gmail.com +79215637722
+2022-11-10 03:54:04.526 [main] INFO   - Запрос list
+2022-11-10 03:54:08.199 [main] INFO   - Запрос help
+2022-11-10 03:54:10.111 [main] INFO   - Запрос asfasf
