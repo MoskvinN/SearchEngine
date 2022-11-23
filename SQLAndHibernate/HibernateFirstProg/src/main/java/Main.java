@@ -40,7 +40,8 @@ public class Main {
                     "INNER JOIN students ON purchaselist.student_name = students.name \n" +
                     "INNER JOIN subscriptions ON students.id = subscriptions.student_id \n" +
                     "INNER JOIN courses ON subscriptions.course_id = courses.id \n" +
-                    "GROUP BY student_id, course_id;");
+                    "AND courses.price = purchaselist.price\n"+
+                    "GROUP BY price, subscription_date;");
 
             statement.close();
             connection.close();
