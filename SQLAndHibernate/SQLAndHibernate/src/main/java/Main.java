@@ -17,6 +17,7 @@ public class Main {
         String user = "root";
         String pass = "8916Moskva773122";
 
+
         try {
             Connection connection = DriverManager.getConnection(url, user, pass);
             Statement statement = connection.createStatement();
@@ -26,6 +27,10 @@ public class Main {
             while (resultSet.next()){
                 System.out.println(resultSet.getString("course_name") + " / " + resultSet.getString("average_quantity"));
             }
+
+            resultSet.close();
+            statement.close();
+            connection.close();
         }catch (Exception e){
             e.printStackTrace();
         }
