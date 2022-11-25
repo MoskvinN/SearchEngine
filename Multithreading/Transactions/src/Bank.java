@@ -1,4 +1,3 @@
-import java.util.Collection;
 import java.util.Map;
 import java.util.Random;
 
@@ -29,8 +28,8 @@ public class Bank {
      */
 
     public synchronized void transfer(String fromAccountNum, String toAccountNum, long amount) {
-        Account fromAccount = accounts.get(fromAccountNum);
-        Account toAccount = accounts.get(toAccountNum);
+        Account fromAccount = getAccount(fromAccountNum);
+        Account toAccount = getAccount(toAccountNum);
         if(!fromAccount.isBlocked() || !toAccount.isBlocked()){
             fromAccount.setMoney(fromAccount.getMoney() - amount);
             toAccount.setMoney(toAccount.getMoney() + amount);
@@ -67,5 +66,12 @@ public class Bank {
         return sum;
     }
 
-
+    public Account getAccount(String accountNum){
+        for (Account account : accounts.values()) {
+            if(account.getAccNumber().equals(accountNum)){
+                return account;
+            }
+        }
+        return null;
+    }
 }
