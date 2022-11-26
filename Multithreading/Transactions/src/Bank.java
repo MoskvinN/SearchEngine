@@ -32,26 +32,41 @@ public class Bank {
     public void transfer(String fromAccountNum, String toAccountNum, long amount) {
         Account fromAccount = getAccount(fromAccountNum);
         Account toAccount = getAccount(toAccountNum);
-        synchronized (fromAccount) {
+        if(fromAccountNum.compareTo(toAccountNum) < 0){
+            synchronized (fromAccount) {
+                synchronized (toAccount) {
+                    doTransfer(fromAccount, toAccount, amount);
+                }
+            }
+        }else {
             synchronized (toAccount) {
-                if (!fromAccount.isBlocked() && !toAccount.isBlocked()) {
-                    fromAccount.setMoney(fromAccount.getMoney() - amount);
-                    toAccount.setMoney(toAccount.getMoney() + amount);
-                    if (amount > 50000) {
-                        try {
-                            if (isFraud(fromAccountNum, toAccountNum, amount)) {
-                                fromAccount.setBlocked();
-                                toAccount.setBlocked();
-                            }
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
+                synchronized (fromAccount) {
+                    doTransfer(fromAccount, toAccount, amount);
                 }
             }
         }
     }
 
+    private void doTransfer(Account fromAccount, Account toAccount, long amount) {
+        if (!fromAccount.isBlocked() && !toAccount.isBlocked()) {
+            if(fromAccount.getMoney() >= amount){
+                fromAccount.setMoney(fromAccount.getMoney() - amount);
+                toAccount.setMoney(toAccount.getMoney() + amount);
+                if (amount > 50000) {
+                    try {
+                        if (isFraud(fromAccount.getAccNumber(), toAccount.getAccNumber(), amount)) {
+                            fromAccount.setBlocked();
+                            toAccount.setBlocked();
+                        }
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }else {
+                System.out.println("На счету отправителя недостаточно средств!!!");
+            }
+        }
+    }
     /**
      * TODO: реализовать метод. Возвращает остаток на счёте.
      */
