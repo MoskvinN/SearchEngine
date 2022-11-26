@@ -3,7 +3,7 @@ public class Account {
     private long money;
     private String accNumber;
 
-    private volatile boolean isBlocked= false;
+    private boolean isBlocked = false;
 
     public Account(long money, String accNumber) {
         this.money = money;

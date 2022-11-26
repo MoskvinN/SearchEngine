@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -27,20 +29,24 @@ public class Bank {
      * усмотрение)
      */
 
-    public synchronized void transfer(String fromAccountNum, String toAccountNum, long amount) {
+    public void transfer(String fromAccountNum, String toAccountNum, long amount) {
         Account fromAccount = getAccount(fromAccountNum);
         Account toAccount = getAccount(toAccountNum);
-        if(!fromAccount.isBlocked() || !toAccount.isBlocked()){
-            fromAccount.setMoney(fromAccount.getMoney() - amount);
-            toAccount.setMoney(toAccount.getMoney() + amount);
-            if(amount > 50000){
-                try {
-                    if(isFraud(fromAccountNum, toAccountNum, amount)){
-                        fromAccount.setBlocked();
-                        toAccount.setBlocked();
+        synchronized (fromAccount) {
+            synchronized (toAccount) {
+                if (!fromAccount.isBlocked() && !toAccount.isBlocked()) {
+                    fromAccount.setMoney(fromAccount.getMoney() - amount);
+                    toAccount.setMoney(toAccount.getMoney() + amount);
+                    if (amount > 50000) {
+                        try {
+                            if (isFraud(fromAccountNum, toAccountNum, amount)) {
+                                fromAccount.setBlocked();
+                                toAccount.setBlocked();
+                            }
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
                 }
             }
         }
