@@ -16,8 +16,8 @@ spring:
 
 indexing-settings:
   sites:
-    - url: https://ipfran.ru/
-      name: ИПФ РАН
+#    - url: https://ipfran.ru/
+#      name: ИПФ РАН
 #    - url: https://www.svetlovka.ru/
 #      name: Светловка
     - url: https://www.playback.ru/

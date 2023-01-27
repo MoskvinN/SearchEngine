@@ -11,9 +11,11 @@ import searchengine.config.Site;
 import searchengine.config.SitesList;
 import searchengine.dto.statistics.*;
 import searchengine.model.*;
-import searchengine.model.PageRepository;
-import searchengine.model.SiteRepository;
+import searchengine.repository.PageRepository;
+import searchengine.repository.SiteRepository;
 import searchengine.model.Status;
+import searchengine.repository.LemmaRepository;
+import searchengine.repository.SearchIndexRepository;
 
 
 import java.io.IOException;
@@ -81,38 +83,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         List<DetailedStatisticsItem> detailed = new ArrayList<>();
         List<Site> sitesList = sites.getSites();
         for (Site site : sitesList) {
-            DetailedStatisticsItem item = new DetailedStatisticsItem();
-            item.setName(site.getName());
-            item.setUrl(site.getUrl());
-            int pages = 0;
-            for (Page page : pageRepository.findAll()) {
-                if (page.getPath().contains(site.getUrl())) {
-                    pages++;
-                }
-            }
-            int lemmas = 0;
-            for (Lemma lemma : lemmaRepository.findAll()) {
-                if (lemma.getSiteId().getUrl().equals(site.getUrl())) {
-                    lemmas++;
-                }
-            }
-            item.setPages(pages);
-            item.setLemmas(lemmas);
-            String status;
-            searchengine.model.Site site1 = siteRepository.findByUrl(site.getUrl());
-            if (site1.getStatus().equals(Status.INDEXING)) {
-                status = "INDEXING";
-            } else if (site1.getStatus().equals(Status.INDEXED)) {
-                status = "INDEXED";
-            } else {
-                status = "FAILED";
-            }
-            item.setStatus(status);
-            if (site1.getLastError() != null) {
-                item.setError(site1.getLastError());
-            }
-            item.setStatusTime(site1.getStatusTime().getNano());
-            detailed.add(item);
+            detailed.add(getItem(site));
         }
 
         StatisticsResponse response = new StatisticsResponse();
@@ -122,6 +93,41 @@ public class StatisticsServiceImpl implements StatisticsService {
         response.setStatistics(data);
         response.setResult(true);
         return response;
+    }
+
+    public DetailedStatisticsItem getItem(Site site){
+        DetailedStatisticsItem item = new DetailedStatisticsItem();
+        item.setName(site.getName());
+        item.setUrl(site.getUrl());
+        int pages = 0;
+        for (Page page : pageRepository.findAll()) {
+            if (page.getPath().contains(site.getUrl())) {
+                pages++;
+            }
+        }
+        int lemmas = 0;
+        for (Lemma lemma : lemmaRepository.findAll()) {
+            if (lemma.getSiteId().getUrl().equals(site.getUrl())) {
+                lemmas++;
+            }
+        }
+        item.setPages(pages);
+        item.setLemmas(lemmas);
+        String status;
+        searchengine.model.Site site1 = siteRepository.findByUrl(site.getUrl());
+        if (site1.getStatus().equals(Status.INDEXING)) {
+            status = "INDEXING";
+        } else if (site1.getStatus().equals(Status.INDEXED)) {
+            status = "INDEXED";
+        } else {
+            status = "FAILED";
+        }
+        item.setStatus(status);
+        if (site1.getLastError() != null) {
+            item.setError(site1.getLastError());
+        }
+        item.setStatusTime(site1.getStatusTime().getNano());
+        return item;
     }
     @Override
     public IndexResponse startIndexing() {
@@ -414,13 +420,13 @@ public class StatisticsServiceImpl implements StatisticsService {
         }
         SearchResponse response;
         if(url.equals("")) {
-            response = GetSearchResponse(query, null, offset, limit);
+            response = getSearchResponse(query, null, offset, limit);
         } else {
-            response = GetSearchResponse(query, url, offset, limit);
+            response = getSearchResponse(query, url, offset, limit);
         }
         return response;
     }
-    private SearchResponse GetSearchResponse(String query, String url, int offset, int limit){
+    private SearchResponse getSearchResponse(String query, String url, int offset, int limit){
         SearchResponseData searchResponseData = new SearchResponseData();
         Iterable<searchengine.model.Site> siteList = siteRepository.findAll();
         LemmaFinder lemmaFinder;
@@ -519,54 +525,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
         List<DetailedSearchData> detailedSearchData = new ArrayList<>();
         for (Page page : sortedPageMap.keySet()){
-            DetailedSearchData searchData = new DetailedSearchData();
-            searchData.setSite(page.getSiteId().getUrl());
-            searchData.setSiteName(page.getSiteId().getName());
-            searchData.setUri(page.getPath());
-            InputStream response;
-            try {
-                String url1 = page.getPath();
-                response = new URL(url1).openStream();
-                Scanner scanner = new Scanner(response);
-                String responseBody = scanner.useDelimiter("\\A").next();
-                searchData.setTitle(responseBody.substring(responseBody.indexOf("<title>") + 7, responseBody.indexOf("</title>")));
-            }catch (IOException e){
-                e.printStackTrace();
-            }
-
-            String html;
-            try {
-                html = Jsoup.connect(page.getPath()).ignoreContentType(true).get().html();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            String plainText = lemmaFinder.HtmlToPlainText(html);
-            StringBuilder builder1 = new StringBuilder();
-            ArrayList<Integer> indexes = new ArrayList<>();
-
-            for (Lemma lemma : sortedLemmaMap.keySet()){
-                String lowerCaseTextString = plainText.toLowerCase();
-                String lowerCaseWord = lemma.getLemma().toLowerCase();
-
-                int index = 0;
-                while(index != -1){
-                    index = lowerCaseTextString.indexOf(lowerCaseWord, index);
-                    if (index != -1) {
-                        indexes.add(index);
-                        index++;
-                    }
-                }
-            }
-            for (Integer integer : indexes){
-                builder1.append("<b>")
-                        .append(plainText, integer, integer + 30)
-                        .append("... ")
-                        .append("</b> ");
-            }
-
-            searchData.setSnippet(builder1.toString());
-            searchData.setRelevance((Double) sortedPageMap.get(page));
-            detailedSearchData.add(searchData);
+            detailedSearchData.add(getSearchData(page, lemmaFinder, sortedLemmaMap, sortedPageMap));
         }
         SearchData searchData = new SearchData();
         searchData.setDetailed(detailedSearchData);
@@ -574,5 +533,56 @@ public class StatisticsServiceImpl implements StatisticsService {
         searchResponseData.setCount(detailedSearchData.size());
         searchResponseData.setSearchData(searchData);
         return searchResponseData;
+    }
+
+    public DetailedSearchData getSearchData(Page page, LemmaFinder lemmaFinder, Map<Lemma, Object> sortedLemmaMap, Map<Page, Object> sortedPageMap){
+        DetailedSearchData searchData = new DetailedSearchData();
+        searchData.setSite(page.getSiteId().getUrl());
+        searchData.setSiteName(page.getSiteId().getName());
+        searchData.setUri(page.getPath());
+        InputStream response;
+        try {
+            String url1 = page.getPath();
+            response = new URL(url1).openStream();
+            Scanner scanner = new Scanner(response);
+            String responseBody = scanner.useDelimiter("\\A").next();
+            searchData.setTitle(responseBody.substring(responseBody.indexOf("<title>") + 7, responseBody.indexOf("</title>")));
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+        String html;
+        try {
+            html = Jsoup.connect(page.getPath()).ignoreContentType(true).get().html();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        String plainText = lemmaFinder.HtmlToPlainText(html);
+        StringBuilder builder1 = new StringBuilder();
+        ArrayList<Integer> indexes = new ArrayList<>();
+
+        for (Lemma lemma : sortedLemmaMap.keySet()){
+            String lowerCaseTextString = plainText.toLowerCase();
+            String lowerCaseWord = lemma.getLemma().toLowerCase();
+
+            int index = 0;
+            while(index != -1){
+                index = lowerCaseTextString.indexOf(lowerCaseWord, index);
+                if (index != -1) {
+                    indexes.add(index);
+                    index++;
+                }
+            }
+        }
+        for (Integer integer : indexes){
+            builder1.append("<b>")
+                    .append(plainText, integer, integer + 30)
+                    .append("... ")
+                    .append("</b> ");
+        }
+
+        searchData.setSnippet(builder1.toString());
+        searchData.setRelevance((Double) sortedPageMap.get(page));
+        return searchData;
     }
 }
