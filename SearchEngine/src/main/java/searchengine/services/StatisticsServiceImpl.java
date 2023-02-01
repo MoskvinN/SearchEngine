@@ -411,7 +411,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
 
     @Override
-    public SearchResponse search(String query, String url, int offset, int limit) {
+    public SearchResponse search(String query, String url) {
         if (query.equals("")){
             SearchResponseError response = new SearchResponseError();
             response.setResult(false);
@@ -420,13 +420,13 @@ public class StatisticsServiceImpl implements StatisticsService {
         }
         SearchResponse response;
         if(url.equals("")) {
-            response = getSearchResponse(query, null, offset, limit);
+            response = getSearchResponse(query, null);
         } else {
-            response = getSearchResponse(query, url, offset, limit);
+            response = getSearchResponse(query, url);
         }
         return response;
     }
-    private SearchResponse getSearchResponse(String query, String url, int offset, int limit){
+    private SearchResponse getSearchResponse(String query, String url){
         SearchResponseData searchResponseData = new SearchResponseData();
         Iterable<searchengine.model.Site> siteList = siteRepository.findAll();
         LemmaFinder lemmaFinder;

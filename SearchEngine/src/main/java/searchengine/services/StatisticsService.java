@@ -14,5 +14,5 @@ public interface StatisticsService {
 
     IndexResponse indexPage(String url);
 
-    SearchResponse search(String query, String url, int offset, int limit);
+    SearchResponse search(String query, String url);
 }
