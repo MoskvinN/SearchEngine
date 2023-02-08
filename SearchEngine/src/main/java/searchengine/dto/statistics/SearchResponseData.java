@@ -2,8 +2,10 @@ package searchengine.dto.statistics;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class SearchResponseData extends SearchResponse{
     private int count;
-    private SearchData searchData;
+    private List<DetailedSearchData> data;
 }

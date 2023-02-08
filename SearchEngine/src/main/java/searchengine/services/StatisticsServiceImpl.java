@@ -115,7 +115,9 @@ public class StatisticsServiceImpl implements StatisticsService {
         item.setLemmas(lemmas);
         String status;
         searchengine.model.Site site1 = siteRepository.findByUrl(site.getUrl());
-        if (site1.getStatus().equals(Status.INDEXING)) {
+        if(site1 == null){
+            return item;
+        }else if (site1.getStatus().equals(Status.INDEXING)) {
             status = "INDEXING";
         } else if (site1.getStatus().equals(Status.INDEXED)) {
             status = "INDEXED";
@@ -468,7 +470,6 @@ public class StatisticsServiceImpl implements StatisticsService {
                 return error;
             }
         }
-
         Map<Lemma, Object> sortedLemmaMap =
                 lemmasForSort.entrySet().stream()
                         .sorted(Map.Entry.comparingByValue())
@@ -483,6 +484,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         }
         List<Page> pageList2;
         for (Lemma lemma : sortedLemmaMap.keySet()){
+            System.out.println(lemma);
             pageList2 = new ArrayList<>();
             List<SearchIndex> indexList2 = indexingRepository.findByLemmaId(lemma);
             for (SearchIndex index : indexList2){
@@ -492,6 +494,7 @@ public class StatisticsServiceImpl implements StatisticsService {
             }
             pageList = pageList2;
         }
+
         if(pageList.isEmpty()){
             return null;
         }
@@ -527,11 +530,9 @@ public class StatisticsServiceImpl implements StatisticsService {
         for (Page page : sortedPageMap.keySet()){
             detailedSearchData.add(getSearchData(page, lemmaFinder, sortedLemmaMap, sortedPageMap));
         }
-        SearchData searchData = new SearchData();
-        searchData.setDetailed(detailedSearchData);
         searchResponseData.setResult(true);
         searchResponseData.setCount(detailedSearchData.size());
-        searchResponseData.setSearchData(searchData);
+        searchResponseData.setData(detailedSearchData);
         return searchResponseData;
     }
 
